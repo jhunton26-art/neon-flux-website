@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Flux Racing: Brand Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Cyberpunk Neon (Matte Cyber Purple, Electric Teal, Silver, Fuchsia Accents) -->
+    <!-- Application Structure Plan: The application is structured as an interactive dashboard with seven core sections accessible via a sticky navigation bar: Intro, Identity (Tabbed), Metrics (Chart.js), Strategy (LLM 1), Briefing (LLM 2), Roadmap (HTML/CSS), and Technical Briefing (LLM 3). This multi-section, non-linear structure replaces the report's linear flow, prioritizing user exploration and information depth across visual, strategic, and technical dimensions. This was chosen to fulfill the 'data-driven' and 'unapologetically aggressive' identity using multiple LLM persona interactions and dynamic data visualization. -->
+    <!-- Visualization & Content Choices: Report Info: Team name/logo -> Goal: High-impact intro -> Viz/Presentation Method: Glitch animation (Canvas). | Report Info: Core visuals -> Goal: Aesthetic exploration -> Viz/Presentation Method: Tabbed content using CSS/HTML (Colors, Driver), Canvas (Logo), and Imagen 3.0 (Car). | Report Info: Performance Claims -> Goal: Quantify technology claims -> Viz/Presentation Method: Chart.js Line Chart with Data Filter -> Interaction: User selects data view (Aero/Power). | Report Info: Strategy/Philosophy/Goals -> Goal: Dynamic content generation -> Viz/Presentation Method: Three distinct LLM text generation features (Strategy, Briefing, Technical Analysis) using highly defined personas. | Report Info: Future Plan -> Goal: Present growth path -> Viz/Presentation Method: HTML/CSS styled timeline. | Justification: Mixes engaging aesthetic elements with rich, persona-driven interactive content and dynamic data views, all adhering to the single-file, no-SVG constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: #0a0a0f;
+            color: #e0e0e0;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .neon-text {
+            text-shadow: 0 0 5px #00f6ff, 0 0 10px #00f6ff, 0 0 20px #00f6ff, 0 0 40px #00f6ff;
+        }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0f;
+            overflow: hidden;
+            clip: rect(0, 900px, 0, 0);
+        }
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff00c1;
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -2px 0 #00f6ff, 2px 2px #ff00c1;
+            animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(42px, 9999px, 44px, 0); } 50% { clip: rect(15px, 9999px, 49px, 0); } 100% { clip: rect(27px, 9999px, 72px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(85px, 9999px, 53px, 0); } 50% { clip: rect(8px, 9999px, 39px, 0); } 100% { clip: rect(19px, 9999px, 96px, 0); }
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            color: #00f6ff;
+            border-bottom-color: #00f6ff;
+        }
+        .content-panel {
+            display: none;
+        }
+        .content-panel.active {
+            display: block;
+        }
+        .car-body {
+            background-color: #3a1a59;
+            position: relative;
+            overflow: hidden;
+        }
+        .helmet-visor {
+            background: linear-gradient(90deg, rgba(0,246,255,0.1) 0%, rgba(0,246,255,0.6) 50%, rgba(0,246,255,0.1) 100%);
+            border-top: 2px solid #00f6ff;
+            border-bottom: 2px solid #00f6ff;
+            box-shadow: 0 0 15px #00f6ff;
+        }
+        .chart-container {
+            position: relative; 
+            width: 100%; 
+            max-width: 800px; /* Maximize readability */
+            height: 350px;
+            max-height: 450px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Mobile adjustment for charts */
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+        .roadmap-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: #00f6ff;
+            box-shadow: 0 0 10px #00f6ff;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Sticky Navigation -->
+    <nav class="sticky top-0 z-50 bg-[#0a0a0f] border-b border-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex flex-wrap justify-center space-x-2 md:space-x-4">
+            <a href="#intro" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Intro</a>
+            <a href="#identity" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Identity</a>
+            <a href="#metrics" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Metrics</a>
+            <a href="#strategy-matrix" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Strategy</a>
+            <a href="#cyber-briefing" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Briefing</a>
+            <a href="#technical-briefing" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Technical</a>
+            <a href="#roadmap" class="text-xs md:text-sm font-orbitron text-gray-300 hover:text-teal-400 transition">Roadmap</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 md:py-16">
+
+        <!-- Hero Section -->
+        <header id="intro" class="text-center mb-16 pt-8 md:pt-0 md:mb-24">
+            <h1 class="relative font-orbitron text-4xl md:text-6xl lg:text-7xl font-bold uppercase tracking-widest glitch-text" data-text="Neon Flux Racing">
+                Neon Flux Racing
+            </h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-400">The Future is Fast</p>
+        </header>
+
+        <!-- Introduction Section -->
+        <section class="max-w-3xl mx-auto text-center mb-16 md:mb-24">
+            <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-4 neon-text">The Grid's New Disruptor</h2>
+            <p class="text-base md:text-lg leading-relaxed text-gray-300">
+                Welcome to **Neon Flux Racing (NFR)**, the new high-technology disruptor crashing onto the Formula 1 grid. Backed by a data-driven corporation, we are not here to simply participate; we are here to redefine performance. Our core mission is to prove that a fusion of superior technology and an unapologetically aggressive style is the definitive formula for winning championships.
+            </p>
+        </section>
+
+        <!-- Visual Identity Section -->
+        <section id="identity" class="max-w-5xl mx-auto pt-8 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-2 neon-text">The Look: Cyberpunk on the Circuit</h2>
+                <p class="text-gray-400">The clash between cold, digital calculation and the vibrant, chaotic energy of the racetrack.</p>
+            </div>
+
+            <!-- Tabs -->
+            <nav class="flex justify-center border-b border-gray-700 mb-8 space-x-4 md:space-x-8">
+                <button class="tab-button active font-orbitron py-2 px-2 md:px-4 text-sm md:text-base" data-target="colors">Colors</button>
+                <button class="tab-button font-orbitron py-2 px-2 md:px-4 text-sm md:text-base" data-target="logo">Logo</button>
+                <button class="tab-button font-orbitron py-2 px-2 md:px-4 text-sm md:text-base" data-target="car">Car Livery</button>
+                <button class="tab-button font-orbitron py-2 px-2 md:px-4 text-sm md:text-base" data-target="driver">Driver Kit</button>
+            </nav>
+
+            <!-- Content Panels -->
+            <div id="tab-content">
+                <!-- Team Colors Panel -->
+                <div id="colors" class="content-panel active">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="space-y-4">
+                           <div class="p-6 rounded-lg bg-gray-900 border border-gray-800">
+                                <h3 class="font-orbitron text-xl font-bold mb-2 text-fuchsia-400">Matte Cyber Purple</h3>
+                                <div class="w-full h-24 rounded" style="background-color: #3a1a59;"></div>
+                                <p class="mt-3 text-gray-400 text-sm">The foundation is a deep, non-reflective matte purple, serving as our primary color for a stealthy, imposing presence.</p>
+                           </div>
+                           <div class="p-6 rounded-lg bg-gray-900 border border-gray-800">
+                                <h3 class="font-orbitron text-xl font-bold mb-2 text-cyan-400">Electric Teal/Aqua</h3>
+                                <div class="w-full h-24 rounded neon-glow" style="background-color: #00f6ff; box-shadow: 0 0 15px #00f6ff;"></div>
+                                <p class="mt-3 text-gray-400 text-sm">Contrasted with sharp, glowing accents of Electric Teal to create a stunning "neon" effect, especially under floodlights.</p>
+                           </div>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h3 class="font-orbitron text-2xl font-bold mb-4">Core Visual Identity</h3>
+                            <p class="text-gray-300 leading-relaxed">
+                                Our core elements are synthesized across all team assets to create a unified and aggressive appearance. The palette is designed to be angular, high-contrast, and unforgettable.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Logo Panel -->
+                <div id="logo" class="content-panel">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                         <div class="flex justify-center items-center p-8 bg-gray-900 border border-gray-800 rounded-lg min-h-[300px]">
+                            <canvas id="logo-canvas" width="300" height="300"></canvas>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h3 class="font-orbitron text-2xl font-bold mb-4">The Glitch Bolt</h3>
+                            <p class="text-gray-300 leading-relaxed">
+                                Our emblem is a dynamic teal lightning bolt that appears to fracture into sharp, silver shards. It's a powerful and instantly recognizable symbol of our brand's fusion of speed and digital disruption.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- The Car Panel (Image Generation) -->
+                <div id="car" class="content-panel">
+                    <div class="text-center mb-6">
+                        <h3 class="font-orbitron text-2xl font-bold mb-4">The Glitch-Stream Livery</h3>
+                        <p class="text-gray-300 leading-relaxed max-w-xl mx-auto mb-6">
+                            Generate a high-fidelity rendering of the Neon Flux F1 car featuring the signature matte purple body and electric teal "glitch stream" decals, demonstrating our technological edge.
+                        </p>
+                    </div>
+                    <div class="max-w-xl mx-auto p-4 rounded-xl bg-gray-900 border border-gray-800 shadow-xl">
+                        <button id="generate-car-image-btn" class="w-full py-4 font-orbitron text-lg uppercase tracking-wider rounded-lg transition duration-300 transform hover:scale-[1.01] bg-fuchsia-600 hover:bg-fuchsia-500 text-black shadow-lg shadow-fuchsia-500/50">
+                            RENDER GLITCH-STREAM LIVERY (3.0)
+                        </button>
+                        <div id="car-image-container" class="mt-6 min-h-64 flex justify-center items-center bg-gray-950 rounded-lg overflow-hidden">
+                            <img id="car-image" class="w-full h-auto object-contain rounded-lg hidden" alt="Neon Flux Racing F1 Car Glitch-Stream Livery">
+                            <div id="car-loading-indicator" class="text-fuchsia-400 p-8 hidden">
+                                <span class="animate-pulse font-orbitron">RENDERING FLUX CAR MODEL...</span>
+                            </div>
+                            <div id="car-placeholder" class="text-gray-600 font-orbitron text-center p-8">
+                                Click 'RENDER' to visualize the NFR F1 Car.
+                            </div>
+                        </div>
+                        <div id="car-error-message" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-300 hidden"></div>
+                    </div>
+                </div>
+
+                <!-- The Driver Panel -->
+                <div id="driver" class="content-panel">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="p-8 bg-gray-900 border border-gray-800 rounded-lg flex justify-center items-center">
+                            <div class="w-48 h-56 rounded-t-full car-body flex flex-col justify-center items-center">
+                               <div class="w-full h-12 helmet-visor mt-8"></div>
+                            </div>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h3 class="font-orbitron text-2xl font-bold mb-4">The Glitch Visor</h3>
+                            <p class="text-gray-300 leading-relaxed">
+                                Our drivers are equally unmistakable. Their helmets feature a design that mimics a faulty augmented reality display, with a glowing teal band across the visor. This distinctive look is a direct reflection of our ambitious on-track strategy.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Metrics Section (Chart.js) -->
+        <section id="metrics" class="max-w-5xl mx-auto mt-24 pt-8 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-2 neon-text">Optimized Metrics: Theoretical vs. Actual</h2>
+                <p class="text-gray-400 max-w-xl mx-auto">Visualize our core competitive advantage—the gap closure between simulated theoretical performance and validated track results.</p>
+            </div>
+            <div class="max-w-3xl mx-auto p-8 rounded-xl bg-gray-900 border border-gray-800 shadow-xl">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+                    <label for="performance-selector" class="block text-teal-400 font-orbitron">DATA STREAM SELECT:</label>
+                    <select id="performance-selector" class="p-2 bg-gray-800 border border-teal-500/50 rounded text-white focus:ring-teal-500 focus:border-teal-500 w-full md:w-auto">
+                        <option value="aero">Aero Efficiency (CdA)</option>
+                        <option value="power">Power Unit Output (kW)</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Strategy Section with LLM Feature 1 -->
+        <section id="strategy-matrix" class="max-w-5xl mx-auto mt-24 pt-8 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-2 neon-text">Calculated Aggression: Strategy Matrix</h2>
+                <p class="text-gray-400">Leverage the data-driven mindset to generate a real-time, aggressive race strategy.</p>
+            </div>
+            <div class="max-w-3xl mx-auto p-8 rounded-xl bg-gray-900 border border-gray-800 shadow-xl">
+                <button id="generate-strategy-btn" class="w-full py-4 font-orbitron text-lg uppercase tracking-wider rounded-lg transition duration-300 transform hover:scale-[1.01] bg-teal-600 hover:bg-teal-500 text-black shadow-lg shadow-teal-500/50">
+                    ✨ GENERATE AGGRESSIVE STRATEGY
+                </button>
+                <div id="strategy-output" class="mt-6 p-4 border border-teal-500/50 rounded-lg bg-gray-950 min-h-24 text-gray-300 text-base leading-relaxed hidden">
+                    <p id="strategy-text"></p>
+                </div>
+                <div id="loading-indicator" class="mt-6 text-center text-teal-400 hidden">
+                    <span class="animate-pulse font-orbitron">PROCESSING FLUX DATA...</span>
+                </div>
+                <div id="error-message" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-300 hidden"></div>
+            </div>
+        </section>
+
+        <!-- Cyber-Briefing Section with LLM Feature 2 -->
+        <section id="cyber-briefing" class="max-w-5xl mx-auto mt-24 pt-8 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-2 neon-text">Cyber-Briefing Protocol: Driver Conditioning</h2>
+                <p class="text-gray-400">Instantiate the high-performance mental conditioning required for optimal flux state.</p>
+            </div>
+            <div class="max-w-3xl mx-auto p-8 rounded-xl bg-gray-900 border border-gray-800 shadow-xl">
+                <label for="briefing-goal" class="block text-fuchsia-400 font-orbitron mb-2">TARGET PERFORMANCE OBJECTIVE:</label>
+                <select id="briefing-goal" class="w-full p-3 mb-6 bg-gray-800 border border-fuchsia-500/50 rounded text-white focus:ring-fuchsia-500 focus:border-fuchsia-500">
+                    <option value="Execute a flawless P1 pole-to-flag victory">Execute a flawless P1 pole-to-flag victory</option>
+                    <option value="Defend P3 against a trailing rival in the final laps">Defend P3 against a trailing rival in the final laps</option>
+                    <option value="Overcome a 10-second penalty and fight back into the points">Overcome a 10-second penalty and fight back into the points</option>
+                </select>
+                
+                <button id="generate-briefing-btn" class="w-full py-4 font-orbitron text-lg uppercase tracking-wider rounded-lg transition duration-300 transform hover:scale-[1.01] bg-fuchsia-600 hover:bg-fuchsia-500 text-black shadow-lg shadow-fuchsia-500/50">
+                    ✨ GENERATE MENTAL BRIEFING
+                </button>
+                <div id="briefing-output" class="mt-6 p-4 border border-fuchsia-500/50 rounded-lg bg-gray-950 min-h-24 text-gray-300 text-base leading-relaxed hidden">
+                    <p id="briefing-text"></p>
+                </div>
+                <div id="briefing-loading-indicator" class="mt-6 text-center text-fuchsia-400 hidden">
+                    <span class="animate-pulse font-orbitron">CALIBRATING NEURAL LINK...</span>
+                </div>
+                <div id="briefing-error-message" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-300 hidden"></div>
+            </div>
+        </section>
+
+        <!-- Technical Briefing Section with LLM Feature 3 -->
+        <section id="technical-briefing" class="max-w-5xl mx-auto mt-24 pt-8 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-2 neon-text">Post-Race Technical Briefing: Failure Analysis</h2>
+                <p class="text-gray-400">Run a simulated technical post-mortem to analyze component failure and define ruthless mitigation protocols.</p>
+            </div>
+            <div class="max-w-3xl mx-auto p-8 rounded-xl bg-gray-900 border border-gray-800 shadow-xl">
+                <label for="component-name" class="block text-teal-400 font-orbitron mb-2">COMPONENT NAME:</label>
+                <input type="text" id="component-name" placeholder="e.g., ERS Battery Cooling Unit" class="w-full p-3 mb-4 bg-gray-800 border border-teal-500/50 rounded text-white focus:ring-teal-500 focus:border-teal-500">
+                
+                <label for="failure-mode" class="block text-teal-400 font-orbitron mb-2">FAILURE MODE / EFFECT:</label>
+                <input type="text" id="failure-mode" placeholder="e.g., 40% thermal runaway resulting in power derate" class="w-full p-3 mb-6 bg-gray-800 border border-teal-500/50 rounded text-white focus:ring-teal-500 focus:border-teal-500">
+                
+                <button id="generate-tech-briefing-btn" class="w-full py-4 font-orbitron text-lg uppercase tracking-wider rounded-lg transition duration-300 transform hover:scale-[1.01] bg-teal-600 hover:bg-teal-500 text-black shadow-lg shadow-teal-500/50">
+                    ✨ GENERATE TECHNICAL ANALYSIS
+                </button>
+                <div id="tech-briefing-output" class="mt-6 p-4 border border-teal-500/50 rounded-lg bg-gray-950 min-h-24 text-gray-300 text-base leading-relaxed hidden">
+                    <p id="tech-briefing-text"></p>
+                </div>
+                <div id="tech-briefing-loading-indicator" class="mt-6 text-center text-teal-400 hidden">
+                    <span class="animate-pulse font-orbitron">EXECUTING ROOT CAUSE LOGIC...</span>
+                </div>
+                <div id="tech-briefing-error-message" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded text-red-300 hidden"></div>
+            </div>
+        </section>
+
+        <!-- Roadmap Section -->
+        <section id="roadmap" class="max-w-5xl mx-auto mt-24 pt-8 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="font-orbitron text-2xl md:text-3xl font-bold mb-2 neon-text">NFR Evolution Roadmap: The Ascent</h2>
+                <p class="text-gray-400 max-w-xl mx-auto">Our projected path to total dominance, governed by strict performance metrics and unyielding ambition.</p>
+            </div>
+            <div class="max-w-4xl mx-auto flex flex-col space-y-12">
+                
+                <div class="relative pl-12 roadmap-item">
+                    <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-teal-500 shadow-lg shadow-teal-500/50 -ml-2"></div>
+                    <h3 class="font-orbitron text-xl font-bold text-teal-400 mb-2">YEAR 1: FLUX DISRUPTION</h3>
+                    <p class="text-gray-300">Establish the new data paradigm. Secure maiden victory. Achieve 90% theoretical/actual performance parity. Aggressive talent acquisition.</p>
+                </div>
+                
+                <div class="relative pl-12 roadmap-item">
+                    <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-teal-500 shadow-lg shadow-teal-500/50 -ml-2"></div>
+                    <h3 class="font-orbitron text-xl font-bold text-teal-400 mb-2">YEAR 2: DIGITAL CONQUEST</h3>
+                    <p class="text-gray-300">Contend for the Constructors' Championship. Integrate next-generation ERS technology (Project Nova). Achieve zero in-race component failures. Dominance in at least three night races.</p>
+                </div>
+                
+                <div class="relative pl-12 roadmap-item">
+                    <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-teal-500 shadow-lg shadow-teal-500/50 -ml-2"></div>
+                    <h3 class="font-orbitron text-xl font-bold text-teal-400 mb-2">YEAR 3: NEURAL DOMINATION</h3>
+                    <p class="text-gray-300">Secure both Driver and Constructors' World Championships. Redefine efficiency standards. Establish NFR as the ultimate, unchallengeable technology platform in global motorsport.</p>
+                </div>
+                
+            </div>
+        </section>
+
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- SCROLL FOR NAVIGATION ---
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // --- TAB LOGIC ---
+            const tabs = document.querySelectorAll('.tab-button');
+            const contentPanels = document.querySelectorAll('.content-panel');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.getAttribute('data-target');
+
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    contentPanels.forEach(panel => {
+                        if (panel.id === target) {
+                            panel.classList.add('active');
+                        } else {
+                            panel.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            // --- CANVAS LOGO ANIMATION ---
+            const canvas = document.getElementById('logo-canvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const w = canvas.width;
+                const h = canvas.height;
+
+                const boltPoints = [
+                    {x: w * 0.5, y: h * 0.1},
+                    {x: w * 0.35, y: h * 0.45},
+                    {x: w * 0.55, y: h * 0.45},
+                    {x: w * 0.4, y: h * 0.9},
+                    {x: w * 0.65, y: h * 0.55},
+                    {x: w * 0.45, y: h * 0.55},
+                    {x: w * 0.6, y: h * 0.1}
+                ];
+
+                function draw() {
+                    ctx.clearRect(0, 0, w, h);
+                    ctx.beginPath();
+                    ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
+                    for (let i = 1; i < boltPoints.length; i++) {
+                        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = '#00f6ff';
+                    ctx.shadowColor = '#00f6ff';
+                    ctx.shadowBlur = 15;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    if (Math.random() > 0.95) {
+                        drawShards();
+                    }
+                }
+                
+                function drawShards() {
+                    const numShards = Math.floor(Math.random() * 5) + 3;
+                    for (let i = 0; i < numShards; i++) {
+                        const startPoint = boltPoints[Math.floor(Math.random() * boltPoints.length)];
+                        ctx.beginPath();
+                        ctx.moveTo(startPoint.x, startPoint.y);
+                        ctx.lineTo(startPoint.x + (Math.random() - 0.5) * 60, startPoint.y + (Math.random() - 0.5) * 60);
+                         ctx.lineTo(startPoint.x + (Math.random() - 0.5) * 60, startPoint.y + (Math.random() - 0.5) * 60);
+                        ctx.closePath();
+                        ctx.fillStyle = Math.random() > 0.3 ? '#c0c0c0' : '#00f6ff';
+                        ctx.fill();
+                    }
+                }
+
+                function animate() {
+                    draw();
+                    requestAnimationFrame(animate);
+                }
+                animate();
+            }
+
+            // --- CHART.JS METRICS ---
+            const performanceSelector = document.getElementById('performance-selector');
+            const chartCanvas = document.getElementById('performanceChart');
+            let performanceChart;
+
+            const lapTimeData = {
+                labels: ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10"],
+                aero: {
+                    theoretical: [1.2, 1.15, 1.1, 1.05, 1.0, 0.95, 0.9, 0.85, 0.8, 0.75],
+                    actual: [1.3, 1.28, 1.2, 1.1, 1.03, 0.98, 0.92, 0.87, 0.81, 0.76],
+                    label: "Drag Coefficient (CdA)",
+                    unit: 's'
+                },
+                power: {
+                    theoretical: [750, 770, 790, 810, 830, 850, 870, 880, 890, 900],
+                    actual: [745, 765, 788, 805, 825, 848, 865, 878, 885, 895],
+                    label: "Power Output (kW)",
+                    unit: 'kW'
+                }
+            };
+
+            function createChart(dataKey) {
+                const data = lapTimeData[dataKey];
+                
+                if (performanceChart) {
+                    performanceChart.destroy();
+                }
+
+                const ctx = chartCanvas.getContext('2d');
+                performanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: lapTimeData.labels,
+                        datasets: [
+                            {
+                                label: `Theoretical ${data.label}`,
+                                data: data.theoretical,
+                                borderColor: '#ff00c1', // Matte Cyber Purple accent
+                                backgroundColor: 'rgba(255, 0, 193, 0.1)',
+                                borderWidth: 3,
+                                fill: false,
+                                tension: 0.2
+                            },
+                            {
+                                label: `Actual ${data.label}`,
+                                data: data.actual,
+                                borderColor: '#00f6ff', // Electric Teal
+                                backgroundColor: 'rgba(0, 246, 255, 0.1)',
+                                borderWidth: 3,
+                                fill: false,
+                                tension: 0.2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e0e0e0',
+                                    font: { family: 'Exo 2' }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: `${data.label} Over Race Blocks`,
+                                color: '#e0e0e0',
+                                font: { family: 'Orbitron', size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(2) + (dataKey === 'power' ? ' kW' : 's');
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Race Block (R1-R10)',
+                                    color: '#c0c0c0',
+                                    font: { family: 'Exo 2' }
+                                },
+                                ticks: { color: '#c0c0c0' },
+                                grid: { color: 'rgba(50, 50, 50, 0.5)' }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: `${data.label} Value`,
+                                    color: '#c0c0c0',
+                                    font: { family: 'Exo 2' }
+                                },
+                                ticks: { color: '#c0c0c0' },
+                                grid: { color: 'rgba(50, 50, 50, 0.5)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            performanceSelector.addEventListener('change', (e) => {
+                createChart(e.target.value);
+            });
+
+            // Initialize chart on load
+            createChart('aero');
+
+
+            // --- GEMINI API Setup ---
+            const GEMINI_MODEL = 'gemini-2.5-flash-preview-05-20';
+            const IMAGEN_MODEL = 'imagen-3.0-generate-002';
+            const API_KEY = "AIzaSyA_amujpcqjoslsTw4aDKWNOPQ67rFfEig";
+            const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
+            const IMAGEN_URL = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:predict?key=${API_KEY}`;
+            
+            async function callApi(url, payload) {
+                let retries = 0;
+                const maxRetries = 5;
+
+                while (retries < maxRetries) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            return await response.json();
+                        }
+
+                        if (response.status >= 500 || response.status === 429) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+
+                        const errorResult = await response.json();
+                        throw new Error(errorResult.error.message || `API error: ${response.status}`);
+
+                    } catch (error) {
+                        retries++;
+                        if (retries >= maxRetries) {
+                            throw new Error(`Failed to connect after ${maxRetries} attempts.`);
+                        }
+                        const delay = Math.pow(2, retries) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+
+            // --- LLM Feature 1: Strategy Matrix Logic (Chief Strategist) ---
+            const strategyBtn = document.getElementById('generate-strategy-btn');
+            const strategyOutputDiv = document.getElementById('strategy-output');
+            const strategyTextP = document.getElementById('strategy-text');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessageDiv = document.getElementById('error-message');
+
+            async function generateStrategy() {
+                strategyBtn.disabled = true;
+                strategyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                loadingIndicator.classList.remove('hidden');
+                strategyOutputDiv.classList.add('hidden');
+                errorMessageDiv.classList.add('hidden');
+                strategyTextP.textContent = '';
+
+                const systemPrompt = "You are the Chief Race Strategist for Neon Flux Racing (NFR), an F1 team defined by its data-driven, 'unapologetically aggressive' style. Your tone must be decisive, high-energy, and reflect the 'Cyberpunk / Glitch' aesthetic—use sharp, digital, and high-contrast language. Generate a concise, single-paragraph summary of the race strategy for the next Grand Prix.";
+                const userQuery = "Draft an aggressive, data-driven race strategy summary. Focus on proving superior technology, maximizing the speed of the Glitch-Stream Livery, and executing ruthless, calculated overtaking maneuvers.";
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                try {
+                    const result = await callApi(GEMINI_URL, payload);
+                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (generatedText) {
+                        strategyTextP.innerHTML = generatedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        strategyOutputDiv.classList.remove('hidden');
+                    } else {
+                        errorMessageDiv.textContent = 'ERROR: Strategy matrix failed to compile. The neural net returned no data.';
+                        errorMessageDiv.classList.remove('hidden');
+                    }
+
+                } catch (error) {
+                    errorMessageDiv.textContent = `CRITICAL FAILURE: ${error.message}`;
+                    errorMessageDiv.classList.remove('hidden');
+                } finally {
+                    strategyBtn.disabled = false;
+                    strategyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+
+            strategyBtn.addEventListener('click', generateStrategy);
+
+
+            // --- LLM Feature 2: Cyber-Briefing Logic (Psychometric Operations AI) ---
+            const briefingBtn = document.getElementById('generate-briefing-btn');
+            const briefingGoalSelect = document.getElementById('briefing-goal');
+            const briefingOutputDiv = document.getElementById('briefing-output');
+            const briefingTextP = document.getElementById('briefing-text');
+            const briefingLoadingIndicator = document.getElementById('briefing-loading-indicator');
+            const briefingErrorMessageDiv = document.getElementById('briefing-error-message');
+
+            async function generateBriefing() {
+                briefingBtn.disabled = true;
+                briefingBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                briefingLoadingIndicator.classList.remove('hidden');
+                briefingOutputDiv.classList.add('hidden');
+                briefingErrorMessageDiv.classList.add('hidden');
+                briefingTextP.textContent = '';
+
+                const selectedGoal = briefingGoalSelect.value;
+                const systemPrompt = "You are the NFR Psychometric Operations AI. Your purpose is to generate a high-intensity, ultra-focused pre-race mental briefing for the driver. The briefing must be concise (1-2 paragraphs), aggressive, and use Cyberpunk/Digital/Glitch terminology (e.g., 'execute the protocol,' 'data streams,' 'neural connection,' 'hard-wired,' 'flux state'). Your language must be absolute and commanding.";
+                const userQuery = `Generate a mental conditioning briefing for the driver focused on this objective: "${selectedGoal}".`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                try {
+                    const result = await callApi(GEMINI_URL, payload);
+                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (generatedText) {
+                        briefingTextP.innerHTML = generatedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        briefingOutputDiv.classList.remove('hidden');
+                    } else {
+                        briefingErrorMessageDiv.textContent = 'ERROR: Neural link acquisition failed. The matrix returned no data.';
+                        briefingErrorMessageDiv.classList.remove('hidden');
+                    }
+
+                } catch (error) {
+                    briefingErrorMessageDiv.textContent = `CRITICAL FAILURE: ${error.message}`;
+                    briefingErrorMessageDiv.classList.remove('hidden');
+                } finally {
+                    briefingBtn.disabled = false;
+                    briefingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    briefingLoadingIndicator.classList.add('hidden');
+                }
+            }
+
+            briefingBtn.addEventListener('click', generateBriefing);
+            
+            // --- LLM Feature 3: Technical Briefing Logic (Chief Technical Officer) ---
+            const techBriefingBtn = document.getElementById('generate-tech-briefing-btn');
+            const componentNameInput = document.getElementById('component-name');
+            const failureModeInput = document.getElementById('failure-mode');
+            const techBriefingOutputDiv = document.getElementById('tech-briefing-output');
+            const techBriefingTextP = document.getElementById('tech-briefing-text');
+            const techBriefingLoadingIndicator = document.getElementById('tech-briefing-loading-indicator');
+            const techBriefingErrorMessageDiv = document.getElementById('tech-briefing-error-message');
+
+            async function generateTechBriefing() {
+                techBriefingBtn.disabled = true;
+                techBriefingBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                techBriefingLoadingIndicator.classList.remove('hidden');
+                techBriefingOutputDiv.classList.add('hidden');
+                techBriefingErrorMessageDiv.classList.add('hidden');
+                techBriefingTextP.textContent = '';
+                
+                const component = componentNameInput.value.trim() || 'Unidentified Actuator';
+                const failure = failureModeInput.value.trim() || 'Unspecified thermal spike';
+
+                const systemPrompt = "You are the Chief Technical Officer (CTO) for Neon Flux Racing. Your tone is cold, objective, and purely analytical. You use technical jargon and data-centric language. Generate a three-section report: 1. Root Cause Analysis (RCA), 2. Immediate Mitigation Protocol, and 3. Long-Term Resolution. The output must be structured, data-heavy, and utterly ruthless in its focus on eliminating the weak point.";
+                const userQuery = `Analyze the component failure: Component: ${component}. Failure Mode: ${failure}. Provide the full technical report.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                try {
+                    const result = await callApi(GEMINI_URL, payload);
+                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (generatedText) {
+                        techBriefingTextP.innerHTML = generatedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        techBriefingOutputDiv.classList.remove('hidden');
+                    } else {
+                        techBriefingErrorMessageDiv.textContent = 'ERROR: Technical analysis failed. Component signature lost.';
+                        techBriefingErrorMessageDiv.classList.remove('hidden');
+                    }
+
+                } catch (error) {
+                    techBriefingErrorMessageDiv.textContent = `CRITICAL FAILURE: ${error.message}`;
+                    techBriefingErrorMessageDiv.classList.remove('hidden');
+                } finally {
+                    techBriefingBtn.disabled = false;
+                    techBriefingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    techBriefingLoadingIndicator.classList.add('hidden');
+                }
+            }
+
+            techBriefingBtn.addEventListener('click', generateTechBriefing);
+
+
+            // --- Feature 4: Car Image Generation Logic (Imagen 3.0) ---
+            const carImageBtn = document.getElementById('generate-car-image-btn');
+            const carImage = document.getElementById('car-image');
+            const carLoadingIndicator = document.getElementById('car-loading-indicator');
+            const carErrorMessageDiv = document.getElementById('car-error-message');
+            const carPlaceholder = document.getElementById('car-placeholder');
+
+            async function generateCarImage() {
+                carImageBtn.disabled = true;
+                carImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                carLoadingIndicator.classList.remove('hidden');
+                carImage.classList.add('hidden');
+                carPlaceholder.classList.add('hidden');
+                carErrorMessageDiv.classList.add('hidden');
+
+                const prompt = "A high-contrast, wide-angle shot of a cyberpunk-style Formula 1 race car with a matte cyber purple body and sharp, electric teal angular streak decals (The Glitch-Stream Livery), racing at high speed on a futuristic night track under strong neon and volumetric lighting. Cinematic and highly detailed.";
+
+                const payload = { 
+                    instances: [{ prompt: prompt }], 
+                    parameters: { "sampleCount": 1 } 
+                };
+                
+                try {
+                    const result = await callApi(IMAGEN_URL, payload);
+                    
+                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                        const base64Data = result.predictions[0].bytesBase64Encoded;
+                        carImage.src = `data:image/png;base64,${base64Data}`;
+                        carImage.classList.remove('hidden');
+                    } else {
+                        carErrorMessageDiv.textContent = 'IMAGE RENDER FAILURE: No image data returned.';
+                        carErrorMessageDiv.classList.remove('hidden');
+                        carPlaceholder.classList.remove('hidden');
+                    }
+
+                } catch (error) {
+                    carErrorMessageDiv.textContent = `CRITICAL RENDER ERROR: ${error.message}`;
+                    carErrorMessageDiv.classList.remove('hidden');
+                    carPlaceholder.classList.remove('hidden');
+                } finally {
+                    carImageBtn.disabled = false;
+                    carImageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    carLoadingIndicator.classList.add('hidden');
+                }
+            }
+
+            carImageBtn.addEventListener('click', generateCarImage);
+        });
+    </script>
+</body>
+</html>
